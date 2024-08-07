@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "[![Actions Status](https://github.com/nmanuilova/backend-project-46/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/nmanuilova/backend-project-46/actions)",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,8 +16,9 @@
     "@eslint/js": "^8.57.0",
     "commander": "^12.1.0",
     "eslint": "^8.57.0",
-    "globals": "^15.8.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.29.1"
+    "eslint-plugin-import": "^2.29.1",
+    "globals": "^15.8.0",
+    "lodash": "^4.17.21"
   }
 }
