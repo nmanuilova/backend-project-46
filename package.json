@@ -5,7 +5,7 @@
   "description": "[![Actions Status](https://github.com/nmanuilova/backend-project-46/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/nmanuilova/backend-project-46/actions)",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx jest"
   },
   "bin": {
     "gendiff": "bin/gendiff.js"
@@ -19,6 +19,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.29.1",
     "globals": "^15.8.0",
+    "jest": "^29.7.0",
     "lodash": "^4.17.21"
   }
 }
