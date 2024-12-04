@@ -24,7 +24,7 @@ const build = (obj1, obj2) => {
       }
       if (_.isObject(val1) && _.isObject(val2)) {
         return { key, value: build(val1, val2), type: 'nested' };
-      } 
+      }
       if (val1 === val2) {
         return { key, value: [val1], type: 'unchanged' };
       }
@@ -32,7 +32,7 @@ const build = (obj1, obj2) => {
     });
 };
 
-const genDiff = (filepath1, filepath2, outputFormat) => {
+const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
   const data1 = parse(readFile(filepath1), getExtension(filepath1));
   const data2 = parse(readFile(filepath2), getExtension(filepath2));
 
