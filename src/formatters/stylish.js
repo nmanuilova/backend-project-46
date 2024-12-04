@@ -15,36 +15,29 @@ function customStringify(obj, depth) {
 }
 
 function getSpace(depth) {
-  return ' '.repeat(depth * 4 + 2); // Отступ в 4 пробела на уровень вложенности
+  return ' '.repeat(depth * 4 + 2);
 }
 
 function getStylishFormat(data) {
-  const iter = (items, depth) => {
-    const result = items.map((item) => {
-      switch (item.type) {
-        case 'deleted':
-          return `${getSpace(depth)}- ${item.key}: ${customStringify(item.value[0], depth + 1)}`;
-        case 'added':
-          return `${getSpace(depth)}+ ${item.key}: ${customStringify(item.value[0], depth + 1)}`;
-        case 'changed':
-          return (
-            `${getSpace(depth)}- ${item.key}: ${customStringify(item.value[0], depth + 1)}\n`
-                        + `${getSpace(depth)}+ ${item.key}: ${customStringify(item.value[1], depth + 1)}`
-          );
-        case 'unchanged':
-          return `${getSpace(depth)}  ${item.key}: ${customStringify(item.value[0], depth + 1)}`;
-        case 'nested':
-          return (
-            `${getSpace(depth)}  ${item.key}: {\n`
-                        + `${iter(item.value, depth + 1)}\n`
-                        + `${getSpace(depth)}  }`
-          );
-        default:
-          throw new Error(`Unknown type: ${item.type}`);
-      }
-    });
-    return result.join('\n');
-  };
+  const iter = (items, depth) => items.map((item) => {
+    const space = getSpace(depth);
+    const value = (val, d = depth + 1) => customStringify(val, d);
+
+    const actions = {
+      deleted: () => `${space}- ${item.key}: ${value(item.value[0])}`,
+      added: () => `${space}+ ${item.key}: ${value(item.value[0])}`,
+      changed: () => `${space}- ${item.key}: ${value(item.value[0])}\n${space}+ ${item.key}: ${value(item.value[1])}`,
+      unchanged: () => `${space}  ${item.key}: ${value(item.value[0])}`,
+      nested: () => `${space}  ${item.key}: {\n${iter(item.value, depth + 1)}\n${space}  }`,
+    };
+
+    if (!actions[item.type]) {
+      throw new Error(`Unknown type: ${item.type}`);
+    }
+
+    return actions[item.type]();
+  }).join('\n');
+
   return `{\n${iter(data, 0)}\n}`;
 }
 
