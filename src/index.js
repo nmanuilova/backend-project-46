@@ -11,26 +11,25 @@ const readFile = (filepath) => fs.readFileSync(path.resolve(process.cwd(), '__fi
 const build = (obj1, obj2) => {
   const commonKeys = _.sortBy(_.union(Object.keys(obj1), Object.keys(obj2)));
 
-  const result = commonKeys
+  return commonKeys
     .flatMap((key) => {
       const val1 = obj1[key];
       const val2 = obj2[key];
+
       if (!_.has(obj1, key)) {
         return { key, value: [val2], type: 'added' };
       }
       if (!_.has(obj2, key)) {
         return { key, value: [val1], type: 'deleted' };
       }
-
       if (_.isObject(val1) && _.isObject(val2)) {
         return { key, value: build(val1, val2), type: 'nested' };
-      } if (val1 === val2) {
+      } 
+      if (val1 === val2) {
         return { key, value: [val1], type: 'unchanged' };
       }
       return { key, value: [val1, val2], type: 'changed' };
     });
-
-  return result;
 };
 
 const genDiff = (filepath1, filepath2, outputFormat) => {
