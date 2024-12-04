@@ -11,26 +11,27 @@ const readFile = (filepath) => fs.readFileSync(path.resolve(process.cwd(), '__fi
 const build = (obj1, obj2) => {
   const commonKeys = _.sortBy(_.union(Object.keys(obj1), Object.keys(obj2)));
 
-  return commonKeys
-    .flatMap((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
-      let result = null;
+  return commonKeys.map((key) => {
+    const val1 = obj1[key];
+    const val2 = obj2[key];
 
-      if (!_.has(obj1, key)) {
-        result = { key, value: [val2], type: 'added' };
-      } else if (!_.has(obj2, key)) {
-        result = { key, value: [val1], type: 'deleted' };
-      } else if (_.isObject(val1) && _.isObject(val2)) {
-        result = { key, value: build(val1, val2), type: 'nested' };
-      } else if (val1 === val2) {
-        result = { key, value: [val1], type: 'unchanged' };
-      } else {
-        result = { key, value: [val1, val2], type: 'changed' };
-      }
+    switch (true) {
+      case !_.has(obj1, key):
+        return { key, value: [val2], type: 'added' };
 
-      return result;
-    });
+      case !_.has(obj2, key):
+        return { key, value: [val1], type: 'deleted' };
+
+      case _.isObject(val1) && _.isObject(val2):
+        return { key, value: build(val1, val2), type: 'nested' };
+
+      case val1 === val2:
+        return { key, value: [val1], type: 'unchanged' };
+
+      default:
+        return { key, value: [val1, val2], type: 'changed' };
+    }
+  });
 };
 
 const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
