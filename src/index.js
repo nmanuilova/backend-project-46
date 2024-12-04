@@ -1,62 +1,44 @@
 import fs from 'fs';
 import path from 'path';
-import yaml from 'js-yaml';
 import _ from 'lodash';
+import parse from './parsers.js';
+import getFormatter from './formatters/index.js';
 
-const parsers = { yml: yaml.load, yaml: yaml.load, json: JSON.parse };
+const getExtension = (filepath) => filepath.split('.').at(-1);
 
-const parse = (filepath) => {
-  const format = filepath.split('.').at(-1);
-  if (parsers[format] === undefined) {
-    throw new Error(`${format} format is not supported. Supported ${Object.keys(parsers).join(', ')} formats`);
-  }
-  const data = fs.readFileSync(path.resolve(process.cwd(), filepath), 'utf-8');
-  return parsers[format](data);
-};
+const readFile = (filepath) => fs.readFileSync(path.resolve(process.cwd(), '__fixtures__', filepath), 'utf-8');
 
-const build = (key, obj1, obj2) => {
-  if (key in obj1 && key in obj2) {
-    if (obj1[key] !== obj2[key]) {
-      return { key, value: [obj1[key], obj2[key]], type: 'changed' };
-    }
-    return { key, value: [obj1[key]], type: 'unchanged' };
-  } if (key in obj1) {
-    return { key, value: [obj1[key]], type: 'deleted' };
-  }
-  return { key, value: [obj2[key]], type: 'added' };
-};
-
-const genDiff = (filepath1, filepath2) => {
-  const data1 = parse(filepath1);
-  const data2 = parse(filepath2);
-  const sortedKeys1 = _.sortBy(Object.keys(data1));
-  const sortedKeys2 = _.sortBy(Object.keys(data2));
-  const commonKeys = _.union(sortedKeys1, sortedKeys2);
+const build = (obj1, obj2) => {
+  const commonKeys = _.sortBy(_.union(Object.keys(obj1), Object.keys(obj2)));
 
   const result = commonKeys
-    .map((key) => build(key, data1, data2))
-    .reduce((acc, item) => {
-      let diff;
-      switch (item.type) {
-        case 'deleted':
-          diff = `${acc} - ${item.key}: ${item.value[0]}\n`;
-          break;
-        case 'added':
-          diff = `${acc} + ${item.key}: ${item.value[0]}\n`;
-          break;
-        case 'changed':
-          diff = `${acc} - ${item.key}: ${item.value[0]}\n + ${item.key}: ${item.value[1]}\n`;
-          break;
-        case 'unchanged':
-          diff = `${acc}   ${item.key}: ${item.value[0]}\n`;
-          break;
-        default:
-          break;
+    .flatMap((key) => {
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+      if (!_.has(obj1, key)) {
+        return { key, value: [val2], type: 'added' };
       }
-      return diff;
-    }, '');
+      if (!_.has(obj2, key)) {
+        return { key, value: [val1], type: 'deleted' };
+      }
 
-  return `{\n${result}}`;
+      if (_.isObject(val1) && _.isObject(val2)) {
+        return { key, value: build(val1, val2), type: 'nested' };
+      } if (val1 === val2) {
+        return { key, value: [val1], type: 'unchanged' };
+      }
+      return { key, value: [val1, val2], type: 'changed' };
+    });
+
+  return result;
+};
+
+const genDiff = (filepath1, filepath2, outputFormat) => {
+  const data1 = parse(readFile(filepath1), getExtension(filepath1));
+  const data2 = parse(readFile(filepath2), getExtension(filepath2));
+
+  const ast = build(data1, data2);
+  return getFormatter(outputFormat)(ast);
 };
 
 export default genDiff;
